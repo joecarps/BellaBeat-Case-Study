@@ -1,0 +1,264 @@
+       ### BELLABEAT CASE STUDY - CLEANING DATA QUERIES
+
+##Using distinct ID"s to find number of unique participants between different data tables
+
+#DailyActivity Table
+SELECT DISTINCT 
+    Id 
+FROM 
+    FitBitData.DailyActivity
+#Reported 33 unique ID's
+;
+#DailyCalories Table
+SELECT DISTINCT 
+    Id 
+FROM 
+    FitBitData.DailyCalories
+#Reported 33 unique ID's
+;
+#DailyIntensities Table
+SELECT DISTINCT 
+    Id 
+FROM 
+    FitBitData.DailyIntensities
+#Reported 33 unique ID's
+;
+#DailySteps Table
+SELECT DISTINCT 
+    Id 
+FROM 
+    FitBitData.DailySteps
+#Reported 33 unique ID's
+;
+#HeartRate Table
+SELECT DISTINCT 
+    Id 
+FROM 
+    FitBitData.HeartRate
+#Reported ONLY 7 unique ID's
+;
+#SleepDates Table
+SELECT DISTINCT 
+    Id 
+FROM 
+    FitBitData.SleepDates
+# Reported 24 unique IDs
+;
+#WeightLogInfoDates Table
+SELECT DISTINCT 
+    Id 
+FROM 
+    FitBitData.WeightLogInfoDates
+# Reported 8 unique IDs
+;
+
+## Finding start and end date of data tracked in different tables
+#DailyActivity Table
+SELECT 
+    MIN(ActivityDate) AS StartDate, 
+    MAX(ActivityDate) AS EndDate
+FROM FitBitData.DailyActivity
+# StartDate 2016-4-12, EndDate 2016-5-12
+;
+#DailyCalories Table
+SELECT 
+    MIN(ActivityDay) AS StartDate, 
+    MAX(ActivityDay) AS EndDate
+FROM FitBitData.DailyCalories
+# StartDate 2016-4-12, EndDate 2016-5-12
+;
+#DailyIntensities Table
+SELECT 
+    MIN(ActivityDay) AS StartDate, 
+    MAX(ActivityDay) AS EndDate
+FROM FitBitData.DailyIntensities
+# StartDate 2016-4-12, EndDate 2016-5-12
+;
+#DailySteps Table
+SELECT 
+    MIN(ActivityDay) AS StartDate, 
+    MAX(ActivityDay) AS EndDate
+FROM FitBitData.DailySteps
+# StartDate 2016-4-12, EndDate 2016-5-12
+;
+#HeartRate Table
+SELECT 
+    MIN(Time) AS StartDate, 
+    MAX(Time) AS EndDate
+FROM FitBitData.HeartRate
+# StartDate 2016-4-12, EndDate 2016-5-12
+;
+#SleepDates Table
+SELECT 
+    MIN(SleepDay) AS StartDate,
+    MAX(SleepDay) AS EndDate
+FROM FitBitData.SleepDates
+# StartDate 2016-4-12, EndDate 2016-5-12
+;
+#WeightLogInfoDates Table
+SELECT 
+    MIN(Date) AS StartDate,
+    MAX(Date) AS EndDate
+FROM FitBitData.WeightLogInfoDates
+# StartDate 2016-4-12, EndDate 2016-5-12
+;
+
+## Finding duplicate rows, if any, in various tables
+#DailyActivity Table
+SELECT ID, ActivityDate, 
+    COUNT(*) AS RowsNo
+FROM FitBitData.DailyActivity
+GROUP BY ID, ActivityDate
+HAVING RowsNo > 1
+# Query returned no duplicate rows
+;
+#DailyCalories Table
+SELECT ID, ActivityDay, 
+    COUNT(*) AS RowsNo
+FROM FitBitData.DailyCalories
+GROUP BY ID, ActivityDay
+HAVING RowsNo > 1
+# Query returned no duplicate rows
+;
+#DailyIntensities Table
+SELECT ID, ActivityDay, 
+    COUNT(*) AS RowsNo
+FROM FitBitData.DailyIntensities
+GROUP BY ID, ActivityDay
+HAVING RowsNo > 1
+# Query returned no duplicate rows
+;
+#DailySteps Table
+SELECT ID, ActivityDay, 
+    COUNT(*) AS RowsNo
+FROM FitBitData.DailySteps
+GROUP BY ID, ActivityDay
+HAVING RowsNo > 1
+# Query returned no duplicate rows
+;
+#HeartRate Table
+SELECT ID, Time, 
+    COUNT(*) AS RowsNo
+FROM FitBitData.HeartRate
+GROUP BY ID, Time
+HAVING RowsNo > 1
+# Query returned several duplicate rows. Due to nature of data this is to be expected.
+;
+#SleepDates Table
+SELECT ID, SleepDay,
+    Count(*) AS RowsNo
+FROM FitBitData.SleepDates
+GROUP BY Id, SleepDay
+HAVING RowsNo > 1
+#3 duplicates found
+;
+#Creat new table removing duplicate rows
+CREATE TABLE FitBitData.SleepDates2 AS SELECT DISTINCT *
+FROM FitBitData.SleepDates
+#New table created named SleepDates2
+;
+#Confirming SleepDates2 Table removed duplicates
+SELECT ID, SleepDay,
+    Count(*) AS RowsNo
+FROM FitBitData.SleepDates2
+GROUP BY Id, SleepDay
+HAVING RowsNo > 1
+# Query returned no duplicate rows
+;
+#WeightLogInfoDates
+SELECT Id, Date,
+    COUNT(*) AS RowsNo
+FROM FitBitData.WeightLogInfoDates
+GROUP BY Id, Date
+HAVING RowsNo > 1
+# Query returned no duplicate rows
+;
+# Looking for 0 quantity in TotalSteps column of DailyActivity table
+SELECT Id, 
+    COUNT(*) AS NoQTYStepDays
+FROM FitBitData.DailyActivity
+WHERE TotalSteps = 0
+GROUP BY Id
+ORDER BY NoQTYStepDays 
+    DESC
+# Reported 15 Id distinct Ids with No Quantity step days
+;
+# Counting  number of records with no steps
+SELECT SUM(DaysNoSteps) AS TotalDaysNoSteps
+FROM (
+    SELECT COUNT(*) AS DaysNoSteps
+    FROM FitBitData.DailyActivity
+    WHERE TotalSteps = 0
+    )
+# Counted 77 records with no steps
+;
+#Create a new table removing innactive days
+CREATE TABLE FitBitData.DailyActivity2 
+    AS SELECT *
+FROM FitBitData.DailyActivity
+WHERE
+TotalSteps > 0
+;
+# Confirming table deleted records with no steps
+SELECT SUM(DaysNoSteps) AS TotalDaysNoSteps
+FROM (
+    SELECT COUNT(*) AS DaysNoSteps
+    FROM FitBitData.DailyActivity2
+    WHERE TotalSteps = 0
+    )
+# All records with no steps removed
+#Confirming table covers 31 days
+SELECT COUNT(*) as TotalRows,
+Count(DISTINCT ActivityDate) AS Days
+FROM FitBitData.DailyActivity2
+#863 rows over 31 day period
+;
+# Looking at all attributes of each zero-step day
+SELECT *, ROUND((SedentaryMinutes / 60), 2) AS SedentaryHours
+FROM FitBitData.DailyActivity
+WHERE TotalSteps = 0
+# Not likely that FitBit users where innactive all 24 hours. Data should be removed at is misleading
+;
+# Looking for 0 quantity in Calories column of DailyCalories table
+SELECT Id, Calories, ActivityDay,
+    COUNT(*) AS NoQTYCalories
+FROM FitBitData.DailyCalories
+WHERE Calories = 0
+GROUP BY Id, Calories, ActivityDay
+ORDER BY NoQTYCalories
+    DESC
+# 4 Id's/Days with No Quantity Calories
+;
+#Create a new table removing 0 calorie days
+CREATE TABLE FitBitData.DailyCalories2 
+    AS SELECT *
+FROM FitBitData.DailyCalories
+WHERE
+Calories > 0
+#FitBitData.DailyCalories2 table created
+;
+# Confirming table deleted records with no calories
+SELECT Id, Calories, ActivityDay,
+    COUNT(*) AS NoQTYCalories
+FROM FitBitData.DailyCalories2
+WHERE Calories = 0
+GROUP BY Id, Calories, ActivityDay
+ORDER BY NoQTYCalories
+    DESC
+# Query returned no results
+;
+# Confirming minute quantity in DailyIntensities table
+SELECT Id, ActivityDay, SUM(SedentaryMinutes + LightlyActiveMinutes)
+    AS Total
+FROM FitBitData.DailyIntensities
+GROUP BY Id, ActivityDay
+HAVING Total <1
+# all Id's had minute totals
+
+###REMOVING DUPLICATED TABLES
+#Didn't delete old tables so that I could rerun code for practice but believe would have be good practice in professional setting. See code below.
+# Dropping original SleepDates table; renaming new table
+
+ALTER TABLE SleepDates RENAME junk
+DROP TABLE IF EXISTS junk;
+ALTER TABLE SleepDates2 RENAME SleepDate
