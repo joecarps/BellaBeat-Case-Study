@@ -1,0 +1,340 @@
+		### BELLABEAT CASE STUDY - DATA ANALYSIS QUERIES
+		
+
+# Selecting dates and corresponding days of the week to identify weekdays and weekends
+SELECT ActivityDate, EXTRACT(DAYOFWEEK FROM ActivityDate) AS DayOfWeek
+FROM FitBitData.DailyActivity2
+#Returned number values for each day(1-7)
+;
+#Categorizing days into Weekday and Weekend days
+SELECT ActivityDate, 
+	CASE 
+		WHEN DayOfWeek = 1 THEN 'Weekend'
+        WHEN DayOfWeek = 7 THEN 'Weekend'
+		ELSE 'Weekday' 
+	END AS PartofWeek
+FROM
+	(SELECT *, EXTRACT(DAYOFWEEK FROM ActivityDate) AS DayOfWeek
+    FROM FitBitData.DailyActivity2) 
+#For use in other tables
+;
+# Looking at average steps, distance, and calories on weekdays vs. weekends
+SELECT PartofWeek, AVG(TotalSteps) AS AverageSteps, AVG(TotalDistance) AS AverageDistance, AVG(Calories) AS AverageCalories 
+FROM
+    (SELECT*,
+	CASE 
+		WHEN DayOfWeek = 1 THEN 'Weekend'
+        WHEN DayOfWeek = 7 THEN 'Weekend'
+		ELSE 'Weekday' 
+	END AS PartofWeek
+FROM
+	(SELECT *, EXTRACT(DAYOFWEEK FROM ActivityDate) AS DayOfWeek
+    FROM FitBitData.DailyActivity2)
+	)
+GROUP BY PartofWeek
+# Slight differences between weekday and weekends. Visualize data
+;
+# Looking at steps per day from DailySteps Table
+SELECT Day, AVG(StepTotal) AS AverageSteps 
+FROM
+    (SELECT*,
+	CASE 
+		WHEN DayOfWeek = 1 THEN 'Sunday'
+        WHEN DayOfWeek = 2 THEN 'Monday'
+        WHEN DayOfWeek = 3 THEN 'Tuesday'
+        WHEN DayOfWeek = 4 THEN 'Wednesday'
+        WHEN DayOfWeek = 5 THEN 'Thursday'
+        WHEN DayOfWeek = 6 THEN 'Friday'
+        WHEN DayOfWeek = 7 THEN 'Saturday'
+	END AS Day
+FROM
+	(SELECT *, EXTRACT(DAYOFWEEK FROM ActivityDay) AS DayOfWeek
+    FROM FitBitData.DailySteps)
+	)
+GROUP BY Day
+#Highest days were Tuesday and Saturday with lowest Sunday. No glaring weekday/weekend differences. Visualize Data
+;
+## Looking at average steps, distance, and calories per day of the week
+SELECT EXTRACT(DAYOFWEEK FROM ActivityDate) AS DayOfWeek, AVG(TotalSteps) AS AverageSteps, AVG(TotalDistance) AS AverageDistance, AVG(Calories) AS AverageCalories
+FROM FitBitData.DailyActivity2
+GROUP BY DayOfWeek
+ORDER BY AverageSteps DESC
+#For use in below table
+;
+#Assign day names to numbers
+SELECT Day, AVG(TotalSteps) AS AverageSteps, AVG(TotalDistance) AS AverageDistance, AVG(Calories) AS AverageCalories
+FROM
+    (SELECT*,
+	CASE 
+		WHEN DayOfWeek = 1 THEN 'Sunday'
+        WHEN DayOfWeek = 2 THEN 'Monday'
+        WHEN DayOfWeek = 3 THEN 'Tuesday'
+        WHEN DayOfWeek = 4 THEN 'Wednesday'
+        WHEN DayOfWeek = 5 THEN 'Thursday'
+        WHEN DayOfWeek = 6 THEN 'Friday'
+        WHEN DayOfWeek = 7 THEN 'Saturday'
+	END AS Day
+FROM
+	(SELECT *, EXTRACT(DAYOFWEEK FROM ActivityDate) AS DayOfWeek
+    FROM FitBitData.DailyActivity2)
+	)
+GROUP BY Day
+ORDER BY AverageSteps DESC
+#Decrease in daily steps for users on Fridays and Sundays. Visualize Data.
+;
+#Categorizing Total Minutes Asleep vs Total Time in Bed
+SELECT TotalMinutesAsleep, TotalTimeInBed
+FROM FitBitData.SleepDates2
+#Use in other tables
+;
+#Categorizing days of the week from SleepDates2 table
+SELECT *, EXTRACT(DAYOFWEEK FROM SleepDay)  AS DayOfWeek
+FROM FitBitData.SleepDates2
+#Use in other tables
+;
+## Average amount of time spent to fall asleep for day of the week
+SELECT EXTRACT(DAYOFWEEK FROM SleepDay) AS DayOfWeek, AVG(TotalTimeInBed - TotalMinutesAsleep) AS AverageTimeInMinutesToFallAsleep
+FROM FitBitData.SleepDates2
+GROUP BY DayOfWeek
+ORDER BY AverageTimeInMinutesToFallAsleep DESC
+;
+# Assign day names
+SELECT Day, AVG(TotalTimeInBed - TotalMinutesAsleep) AS AverageTimeInMinutesToFallAsleep
+FROM
+    (SELECT*,
+	CASE 
+		WHEN DayOfWeek = 1 THEN 'Sunday'
+        WHEN DayOfWeek = 2 THEN 'Monday'
+        WHEN DayOfWeek = 3 THEN 'Tuesday'
+        WHEN DayOfWeek = 4 THEN 'Wednesday'
+        WHEN DayOfWeek = 5 THEN 'Thursday'
+        WHEN DayOfWeek = 6 THEN 'Friday'
+        WHEN DayOfWeek = 7 THEN 'Saturday'
+	END AS Day
+FROM
+	(SELECT *, EXTRACT(DAYOFWEEK FROM SleepDay) AS DayOfWeek
+    FROM FitBitData.SleepDates2)
+	)
+GROUP BY Day
+ORDER BY AverageTimeInMinutesToFallAsleep DESC
+#Significant increase in the amount of time to fall asleep on the weekend. Serious case of the Sunday scaries. :). Visualize Data.
+;
+# Average amount of time spent asleep and average time to fall asleep per day of the week
+SELECT Day, AVG(TotalMinutesAsleep) AS AverageMinutesAsleep, AVG(TotalMinutesAsleep / 60) AS AverageHoursAsleep, AVG(TotalTimeInBed - TotalMinutesAsleep) AS AverageMinutesToSleep
+FROM
+    (SELECT*,
+	CASE 
+		WHEN DayOfWeek = 1 THEN 'Sunday'
+        WHEN DayOfWeek = 2 THEN 'Monday'
+        WHEN DayOfWeek = 3 THEN 'Tuesday'
+        WHEN DayOfWeek = 4 THEN 'Wednesday'
+        WHEN DayOfWeek = 5 THEN 'Thursday'
+        WHEN DayOfWeek = 6 THEN 'Friday'
+        WHEN DayOfWeek = 7 THEN 'Saturday'
+	END AS Day
+FROM
+	(SELECT *, EXTRACT(DAYOFWEEK FROM SleepDay) AS DayOfWeek
+    FROM FitBitData.SleepDates2)
+	)
+GROUP BY Day
+ORDER BY AverageHoursAsleep DESC
+#Visualize data
+;
+# Left joining all 3 tables
+SELECT *
+FROM FitBitData.DailyActivity2 AS d 
+LEFT JOIN FitBitData.SleepDates2 AS s
+ON d.ActivityDate = s.SleepDay AND d.Id = s.Id
+LEFT JOIN FitBitData.WeightLogInfoDates AS w
+ON s.SleepDay = w.Date AND s.Id = w.Id
+ORDER BY d.Id, Date
+#863 rows returned
+;
+# Inner joining all 3 tables
+SELECT *,
+FROM FitBitData.DailyActivity2 AS d 
+JOIN FitBitData.SleepDates2 AS s
+ON d.ActivityDate = s.SleepDay AND d.Id = s.Id
+JOIN FitBitData.WeightLogInfoDates AS w
+ON s.SleepDay = w.Date AND s.Id = w.Id
+ORDER BY d.Id, Date
+# 35 rows returned
+;
+# Finding unique participants in the DailyActivity who do not have records in either the SleepLog or WeightLog tables (or both)
+SELECT DISTINCT Id
+FROM FitBitData.DailyActivity2
+WHERE Id NOT IN (
+	SELECT d.Id
+	FROM FitBitData.DailyActivity2 AS d 
+	JOIN FitBitData.SleepDates2 AS s
+	ON d.ActivityDate = s.SleepDay AND d.Id = s.Id
+	JOIN FitBitData.WeightLogInfoDates AS w
+	ON s.SleepDay = w.Date AND s.Id = w.Id)
+# Out of 33 participants in the DailyActivity table, 28 do not have records in either the SleepLog or WeightLog tables (or both)
+;
+# Looking at instances where users don't have records in SleepLog based on day of the week
+SELECT EXTRACT(DAYOFWEEK FROM ActivityDate) AS DayOfWeek, COUNT(*) AS Qty
+FROM FitBitData.DailyActivity2 AS d 
+	LEFT JOIN FitBitData.SleepDates2 AS s
+	ON d.ActivityDate = s.SleepDay AND d.Id = s.Id
+WHERE s.TotalMinutesAsleep IS NULL
+GROUP BY DayOfWeek
+ORDER BY Qty DESC
+#Weekdays had the highest number of days missing with Friday being a significant drop leading into the weekend
+;
+# Adding day names
+SELECT Day, COUNT(*) AS Qty
+FROM
+        (SELECT*,
+    	CASE 
+		WHEN DayOfWeek = 1 THEN 'Sunday'
+        WHEN DayOfWeek = 2 THEN 'Monday'
+        WHEN DayOfWeek = 3 THEN 'Tuesday'
+        WHEN DayOfWeek = 4 THEN 'Wednesday'
+        WHEN DayOfWeek = 5 THEN 'Thursday'
+        WHEN DayOfWeek = 6 THEN 'Friday'
+        WHEN DayOfWeek = 7 THEN 'Saturday'
+    END AS Day
+FROM
+	(SELECT EXTRACT(DAYOFWEEK FROM ActivityDate) AS DayOfWeek, COUNT(*) AS Qty
+FROM FitBitData.DailyActivity2 AS d 
+	LEFT JOIN FitBitData.SleepDates2 AS s
+	ON d.ActivityDate = s.SleepDay AND d.Id = s.Id)
+		)
+WHERE s.TotalMinutesAsleep IS NULL
+GROUP BY Day
+ORDER BY Qty DESC
+#ERROR-SELECT list expression references column ActivityDate which is neither grouped nor aggregated at [14:40]
+#Change names in Excel and visualize
+;
+# Calories and total steps
+SELECT Id, ActivityDate, Calories, TotalSteps
+FROM FitBitData.DailyActivity2
+;
+# Calories and active minutes
+SELECT Id, ActivityDate, Calories, SedentaryMinutes, LightlyActiveMinutes, FairlyActiveMinutes, VeryActiveMinutes
+FROM FitBitData.DailyActivity2
+;
+# Calories and active distances
+SELECT Id, ActivityDate, Calories, SedentaryActiveDistance, LightActiveDistance, ModeratelyActiveDistance, VeryActiveDistance, TotalDistance
+FROM FitBitData.DailyActivity2
+;
+# Looking at calories and total minutes asleep
+SELECT d.Id, d.ActivityDate, Calories, TotalMinutesAsleep
+FROM FitBitData.DailyActivity2 AS d 
+INNER JOIN FitBitData.SleepDates2 AS s 
+ON d.Id = s.Id AND d.ActivityDate = s.SleepDay
+;
+# Looking at calories and total minutes & hours asleep from day before
+SELECT D.Id, D.ActivityDate, Calories, TotalMinutesAsleep,
+			LAG(TotalMinutesAsleep, 1) OVER (ORDER BY D.Id, D.ActivityDate) AS MinutesSleptDayBefore,
+			LAG(TotalMinutesAsleep, 1) OVER (ORDER BY D.Id, D.ActivityDate) / 60 AS HoursSleptDayBefore
+FROM FitBitData.DailyActivity2 AS D
+INNER JOIN FitBitData.SleepDates2 AS S
+ON D.Id = s.Id AND d.ActivityDate = S.SleepDay
+;
+# Looking at manual reports vs. automated reports in WeightLogInfoDates table for all 8 IDs;
+SELECT IsManualReport, COUNT(DISTINCT Id)
+FROM FitBitData.WeightLogInfoDates
+GROUP BY IsManualReport
+#5 were reported manually, 3 automatically
+;
+#average weight of participants whose reports were generated manually vs. automatically
+SELECT IsManualReport, COUNT(*) AS NumReports, AVG(WeightPounds) AS AvgWeight, AVG(BMI) AS AvgBMI
+FROM FitBitData.WeightLogInfoDates
+GROUP BY IsManualReport
+#41 Manual reports, 26 automatic.People who muanually reported appeared to be less overweight> Visualize data
+;
+# Creating new column total minutes in DailyActivity2 table
+SELECT Id, ActivityDate, (SedentaryMinutes + LightlyActiveMinutes + FairlyActiveMinutes + VeryActiveMinutes) AS TotalMinutes, SedentaryMinutes, LightlyActiveMinutes, FairlyActiveMinutes, VeryActiveMinutes
+FROM FitBitData.DailyActivity2
+;
+# Active minutes and total sleep
+SELECT D.Id, ActivityDate, LightlyActiveMinutes, FairlyActiveMinutes, VeryActiveMinutes, (LightlyActiveMinutes + FairlyActiveMinutes + VeryActiveMinutes) AS TotalActiveMinutes, TotalMinutesAsleep, (TotalTimeInBed - TotalMinutesAsleep) AS MinutesToFallAsleep
+FROM FitBitData.DailyActivity2 AS D
+JOIN FitBitData.SleepDates2 AS S
+ON D.Id = D.Id AND ActivityDate = SleepDay
+;
+## Number of days where total steps is equal to or greater than 10,000 steps
+SELECT EXTRACT(DAYOFWEEK FROM ActivityDate) AS DayOfWeek, COUNT(*)
+FROM FitBitData.DailyActivity2
+WHERE TotalSteps >= 10000
+GROUP BY DayOfWeek
+#Out of 863 days and 33 participants. 
+;
+# Add day names
+SELECT Day, COUNT(*)
+FROM
+        (SELECT*,
+    	CASE 
+		WHEN DayOfWeek = 1 THEN 'Sunday'
+        WHEN DayOfWeek = 2 THEN 'Monday'
+        WHEN DayOfWeek = 3 THEN 'Tuesday'
+        WHEN DayOfWeek = 4 THEN 'Wednesday'
+        WHEN DayOfWeek = 5 THEN 'Thursday'
+        WHEN DayOfWeek = 6 THEN 'Friday'
+        WHEN DayOfWeek = 7 THEN 'Saturday'
+    END AS Day
+FROM
+	(SELECT *, EXTRACT(DAYOFWEEK FROM ActivityDate) AS DayOfWeek
+    FROM FitBitData.DailyActivity2)
+        )
+WHERE TotalSteps >= 10000
+GROUP BY Day
+#Visualize Data.
+;
+#Days where users got less than 7 hours of sleep
+SELECT EXTRACT(DAYOFWEEK FROM ActivityDate) AS DayOfWeek, COUNT(*) AS NumDays
+FROM FitBitData.DailyActivity2 AS D
+JOIN FitBitData.SleepDates2 AS S
+ON D.Id = S.Id AND D.ActivityDate = S.SleepDay
+WHERE TotalMinutesAsleep < 420
+GROUP BY DayOfWeek
+ORDER BY NumDays DESC
+#To Combine 
+;
+# Days where users got 7-9 hours of sleep per night
+SELECT EXTRACT(DAYOFWEEK FROM ActivityDate) AS DayOfWeek, COUNT(*) AS NumDays
+FROM FitBitData.DailyActivity2 AS D
+JOIN FitBitData.SleepDates2 AS S
+ON D.Id = S.Id AND D.ActivityDate = S.SleepDay
+WHERE TotalMinutesAsleep >= 420 AND TotalMinutesAsleep <= 540
+GROUP BY DayOfWeek
+ORDER BY NumDays DESC
+#To Combine
+;
+#Days where users got more than 9 hours of sleep
+SELECT EXTRACT(DAYOFWEEK FROM ActivityDate) AS DayOfWeek, COUNT(*) AS NumDays
+FROM FitBitData.DailyActivity2 AS D
+JOIN FitBitData.SleepDates2 AS S
+ON D.Id = S.Id AND D.ActivityDate = S.SleepDay
+WHERE TotalMinutesAsleep > 540
+GROUP BY DayOfWeek
+ORDER BY NumDays DESC
+#To Combine
+#Combined all 3 Queries in excel
+;
+#Trying to assign names of days
+SELECT Day, COUNT(*) AS NumDays
+FROM
+        (SELECT*,
+    	CASE 
+		WHEN DayOfWeek = 1 THEN 'Sunday'
+        WHEN DayOfWeek = 2 THEN 'Monday'
+        WHEN DayOfWeek = 3 THEN 'Tuesday'
+        WHEN DayOfWeek = 4 THEN 'Wednesday'
+        WHEN DayOfWeek = 5 THEN 'Thursday'
+        WHEN DayOfWeek = 6 THEN 'Friday'
+        WHEN DayOfWeek = 7 THEN 'Saturday'
+    END AS Day
+FROM
+	(SELECT EXTRACT(DAYOFWEEK FROM ActivityDate) AS DayOfWeek, COUNT(*) AS NumDays
+FROM FitBitData.DailyActivity2 AS D
+JOIN FitBitData.SleepDates2 AS S
+ON D.Id = S.Id AND D.ActivityDate = S.SleepDay)
+        )
+WHERE TotalMinutesAsleep >= 420 AND TotalMinutesAsleep <= 540
+GROUP BY Day
+ORDER BY NumDays DESC
+#Error - SELECT list expression references column ActivityDate which is neither grouped nor aggregated at [14:40]. Circle back to determine error
+#Added days names in excel and visualize.
